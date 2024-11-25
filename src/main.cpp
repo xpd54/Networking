@@ -35,7 +35,7 @@ int main() {
   std::thread context_thread = std::thread([&]() { context.run(); });
   asio::io_context::work idleWork(context);
   // have an address to connect with
-  asio::ip::tcp::endpoint endpoint(asio::ip::make_address("51.38.81.49 ", ec),
+  asio::ip::tcp::endpoint endpoint(asio::ip::make_address("51.38.81.49", ec),
                                    80);
   // create a socket, the context will deliver the implementation
   asio::ip::tcp::socket socket(context);
