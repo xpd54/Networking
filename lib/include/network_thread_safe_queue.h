@@ -1,8 +1,8 @@
 #pragma once
+#include "network_common.h"
 #include <cstddef>
 #include <deque>
 #include <mutex>
-#include <network_common.h>
 #include <utility>
 
 xpd54_namespace_start
