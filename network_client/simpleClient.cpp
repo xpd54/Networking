@@ -1,6 +1,5 @@
 #include "network_message.h"
 #include <cstdint>
-#include <iostream>
 #include <xpd54_network.h>
 enum class CustomMsgTypes : uint32_t { FireBullet, MovePlayer };
 int main() {
