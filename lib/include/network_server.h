@@ -6,6 +6,7 @@
 #include "network_thread_safe_queue.h"
 #include <__algorithm/remove.h>
 #include <algorithm>
+#include <cstddef>
 #include <cstdint>
 #include <deque>
 #include <exception>
@@ -56,7 +57,7 @@ public:
         std::shared_ptr<Connection<T>> new_connection =
             std::make_shared<Connection<T>>(Connection<T>::owner::server,
                                             m_asioContext, std::move(socket),
-                                            m_qMessageIn);
+                                            m_qMessagesIn);
         // Give the user server a change to deny connection
         if (on_client_connect(new_connection)) {
           m_deqConnections.push_back(new_connection);
@@ -110,6 +111,15 @@ public:
     }
   }
 
+  void update(size_t nMaxMessages = -1) {
+    size_t nMessageCount = 0;
+    while (nMessageCount < nMaxMessages && !m_qMessagesIn.empty()) {
+      auto msg = m_qMessagesIn.pop_front();
+      on_message(msg.remote, msg.msg);
+      nMessageCount++;
+    }
+  }
+
 protected:
   virtual bool on_client_connect(std::shared_ptr<Connection<T>> client) {
     return false;
@@ -121,7 +131,7 @@ protected:
                           Message<T> &msg) {}
 
   // Thread safe queue for all incoming mesage
-  thread_safe_queue<Owned_message<T>> m_qMessageIn;
+  thread_safe_queue<Owned_message<T>> m_qMessagesIn;
   // Container of active validated connecitons
   std::deque<std::shared_ptr<Connection<T>>> m_deqConnections;
 
