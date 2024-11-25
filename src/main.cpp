@@ -1,3 +1,4 @@
+#include "asio/buffer.hpp"
 #include "asio/ip/address.hpp"
 #include "asio/ip/tcp.hpp"
 #include <asio.hpp>
@@ -6,15 +7,31 @@
 #include <chrono>
 #include <cstddef>
 #include <iostream>
+#include <system_error>
 #include <thread>
 #include <vector>
+
+std::vector<char> vBuffer(20 * 1024);
+void GrabSomeData(asio::ip::tcp::socket &socket) {
+  socket.async_read_some(asio::buffer(vBuffer.data(), vBuffer.size()),
+                         [&](std::error_code ec, size_t length) {
+                           if (!ec) {
+                             std::cout << "\n\n Read " << length << " bytes"
+                                       << '\n';
+                             for (size_t i = 0; i < length; ++i)
+                               std::cout << vBuffer[i];
+                             GrabSomeData(socket);
+                           }
+                         });
+}
+
 int main() {
   asio::error_code ec;
 
   // create a context - essentially the platform specific interface.
   asio::io_context context;
   // have an address to connect with
-  asio::ip::tcp::endpoint endpoint(asio::ip::make_address("93.184.216.34", ec),
+  asio::ip::tcp::endpoint endpoint(asio::ip::make_address("51.38.81.49 ", ec),
                                    80);
   // create a socket, the context will deliver the implementation
   asio::ip::tcp::socket socket(context);
@@ -33,7 +50,7 @@ int main() {
                            "Connection: close \r\n\r\n";
     /*If socket is open write some data in that socket with write_some*/
     socket.write_some(asio::buffer(sRequest.data(), sRequest.size()), ec);
-    std::this_thread::sleep_for(std::chrono::seconds(2));
+    socket.wait(socket.wait_read);
     size_t bytes = socket.available();
     std::cout << "Bytes Available: " << bytes << '\n';
 
