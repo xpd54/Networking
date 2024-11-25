@@ -6,6 +6,7 @@
 #include "network_thread_safe_queue.h"
 #include <algorithm>
 #include <cstdint>
+#include <deque>
 #include <exception>
 #include <iostream>
 #include <memory>
@@ -54,6 +55,15 @@ public:
             std::make_shared<Connection<T>>(Connection<T>::owner::server,
                                             m_asioContext, std::move(socket),
                                             m_qMessageIn);
+        // Give the user server a change to deny connection
+        if (OnClientConnect(new_connection)) {
+          m_deqConnections.push_back(new_connection);
+          m_deqConnections.back()->ConnectToClient(nIDCounter++);
+          std::cout << "[" << m_deqConnections.back()->GetId() << "]"
+                    << " Connection Approved" << '\n';
+        } else {
+          std::cout << "[-----] Connection Denied" << '\n';
+        }
       } else {
         // Error have happed during acceptance of connection
         std::cout << "[Server] New Connection Error: " << ec.message() << '\n';
@@ -83,6 +93,8 @@ protected:
 
   // Thread safe queue for all incoming mesage
   thread_safe_queue<Owned_message<T>> m_qMessageIn;
+  // Container of active validated connecitons
+  std::deque<std::shared_ptr<Connection<T>>> m_deqConnections;
 
   asio::io_context m_asioContext;
   std::thread m_threadContext;
