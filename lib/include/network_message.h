@@ -39,6 +39,26 @@ template <typename T> struct message {
     // Return the message
     return msg;
   }
+
+  template <typename DataType>
+  friend message<T> &operator>>(message<T> &msg, DataType &data) {
+    // assert if data is copyable
+    static_assert(std::is_standard_layout_v<DataType>,
+                  "Data is too complex to copy");
+    // get size how much suppose to be copy
+    size_t data_body_size = msg.body.size() - sizeof(DataType);
+
+    // copy the vector data into data
+    // TODO: This could be done by pop_back and pop, will test it later;
+    std::memcpy(&data, msg.body.data() + data_body_size, sizeof(DataType));
+
+    // resize the vector
+    msg.body.resize(data_body_size);
+
+    // set the size of message header
+    msg.header.size = msg.size();
+    return msg;
+  }
 };
 } // namespace network
 } // namespace xpd54
