@@ -9,7 +9,7 @@ int main() {
   msg.header.id = CustomMsgTypes::FireBullet;
   int a = 1;
   bool b = true;
-  float c = 3.14;
+  float c = 3.14f;
   struct {
     float x;
     float y;
@@ -20,7 +20,7 @@ int main() {
   b = false;
   c = 99.34f;
 
-  msg >> d << c >> b >> a;
+  msg >> d >> c >> b >> a;
 
   return 0;
 }
