@@ -2,29 +2,27 @@
 #include "network_common.h"
 #include <cstddef>
 #include <cstring>
+#include <memory>
 #include <ostream>
 #include <type_traits>
-xpd54_namespace_start
-
-    template <typename T>
-    struct message_header {
+xpd54_namespace_start template <typename T> struct message_header {
   T id{};
   uint32_t size = 0;
 };
 
-template <typename T> struct message {
+template <typename T> struct Message {
   message_header<T> header{};
   // vector data which is holding is just a vector of Char
   std::vector<uint8_t> body;
 
   inline size_t size() const { return sizeof(message_header<T>) + body.size(); }
-  friend std::ostream &operator<<(std::ostream &os, const message<T> &msg) {
+  friend std::ostream &operator<<(std::ostream &os, const Message<T> &msg) {
     os << "id:" << int(msg.header.id) << " size:" << msg.size();
     return os;
   }
 
   template <typename DataType>
-  friend message<T> &operator<<(message<T> &msg, const DataType &data) {
+  friend Message<T> &operator<<(Message<T> &msg, const DataType &data) {
     // assert if data can be pushed into the vector
     static_assert(std::is_standard_layout<DataType>::value,
                   "Data is too complex");
@@ -42,7 +40,7 @@ template <typename T> struct message {
   }
 
   template <typename DataType>
-  friend message<T> &operator>>(message<T> &msg, DataType &data) {
+  friend Message<T> &operator>>(Message<T> &msg, DataType &data) {
     // assert if data is copyable
     static_assert(std::is_standard_layout_v<DataType>,
                   "Data is too complex to copy");
@@ -61,4 +59,17 @@ template <typename T> struct message {
     return msg;
   }
 };
+
+template <typename T> class Connection;
+template <typename T> struct Owned_message {
+  std::shared_ptr<Connection<T>> remote = nullptr;
+  Message<T> msg;
+
+  friend std::ostream &operator<<(std::ostream &os,
+                                  const Owned_message<T> &msg) {
+    os << msg.msg;
+    return os;
+  }
+};
+
 xpd54_namespace_end

@@ -5,7 +5,7 @@
 enum class CustomMsgTypes : uint32_t { FireBullet, MovePlayer };
 int main() {
   // only allowd custom msg types
-  xpd54::network::message<CustomMsgTypes> msg;
+  xpd54::network::Message<CustomMsgTypes> msg;
   msg.header.id = CustomMsgTypes::FireBullet;
   int a = 1;
   bool b = true;
