@@ -1,4 +1,5 @@
 #include "asio/buffer.hpp"
+#include "asio/io_context.hpp"
 #include "asio/ip/address.hpp"
 #include "asio/ip/tcp.hpp"
 #include <asio.hpp>
@@ -30,6 +31,9 @@ int main() {
 
   // create a context - essentially the platform specific interface.
   asio::io_context context;
+  // context on different thread
+  std::thread context_thread = std::thread([&]() { context.run(); });
+  asio::io_context::work idleWork(context);
   // have an address to connect with
   asio::ip::tcp::endpoint endpoint(asio::ip::make_address("51.38.81.49 ", ec),
                                    80);
@@ -45,23 +49,18 @@ int main() {
   }
 
   if (socket.is_open()) {
+    GrabSomeData(socket);
     std::string sRequest = "GET /index.html HTTP/1.1\r\n"
                            "Host: example.com\r\n"
                            "Connection: close \r\n\r\n";
     /*If socket is open write some data in that socket with write_some*/
     socket.write_some(asio::buffer(sRequest.data(), sRequest.size()), ec);
-    socket.wait(socket.wait_read);
-    size_t bytes = socket.available();
-    std::cout << "Bytes Available: " << bytes << '\n';
+    std::this_thread::sleep_for(std::chrono::seconds(10));
+    context.stop();
 
-    if (bytes) {
-      std::vector<char> vBuffer(bytes);
-      /*If socket sends back some data read that data to a vector which holds
-       * char*/
-      socket.read_some(asio::buffer(vBuffer.data(), vBuffer.size()), ec);
-      for (auto &c : vBuffer)
-        std::cout << c;
-    }
+    // every thread need to join the main before main goes out of scop
+    if (context_thread.joinable())
+      context_thread.join();
   }
 
   std::this_thread::sleep_for(std::chrono::seconds(5));
