@@ -16,10 +16,10 @@ public:
     // Initialize
   }
 
-  virtual ~Network_Client() { Disconnect(); }
+  virtual ~Network_Client() { disconnect(); }
 
   // connect to given ip address and port of server
-  bool Connect(const std::string &host, const uint32_t port) {
+  bool connect(const std::string &host, const uint32_t port) {
     try {
       // create a connection
       m_connection = std::make_unique<Connection<T>>();
@@ -29,7 +29,7 @@ public:
       m_endpoints = resolver.resolve(host, std::to_string(port));
 
       // Tell the connection object to connect to server
-      m_connection->ConnectToServer(m_endpoints);
+      m_connection->connect_to_server(m_endpoints);
 
       // Start the context thread
       thread_context = std::thread([this]() { m_context.run(); });
@@ -40,9 +40,9 @@ public:
     return true;
   }
 
-  bool Disconnect() {
+  bool disconnect() {
 
-    if (IsConnected()) {
+    if (is_connected()) {
       m_connection->disconnect();
     }
 
@@ -57,7 +57,7 @@ public:
     m_connection.release();
   }
 
-  bool IsConnected() {
+  bool is_connected() {
     if (m_connection) {
       return m_connection->is_connected;
     } else {
@@ -65,7 +65,7 @@ public:
     }
   }
 
-  thread_safe_queue<Owned_message<T>> &Incoming() { return m_qMessagesIn; }
+  thread_safe_queue<Owned_message<T>> &incoming() { return m_qMessagesIn; }
 
 protected:
   /* Client will setup the connection. The negotiation between server and client

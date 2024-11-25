@@ -4,12 +4,14 @@
 #include "network_common.h"
 #include "network_message.h"
 #include "network_thread_safe_queue.h"
+#include <__algorithm/remove.h>
 #include <algorithm>
 #include <cstdint>
 #include <deque>
 #include <exception>
 #include <iostream>
 #include <memory>
+#include <sys/_types/_pid_t.h>
 #include <system_error>
 #include <thread>
 xpd54_namespace_start template <typename T> class Network_Server {
@@ -22,7 +24,7 @@ public:
 
   bool Start() {
     try {
-      WaitForClientConnection();
+      wait_for_client_connection();
       m_threadContext = std::thread([this]() { m_asioContext.run(); });
     } catch (std::exception &e) {
       std::cerr << "[Server] Eception: " << e.what() << '\n';
@@ -43,7 +45,7 @@ public:
   }
 
   // Async - instruct asio to wait for connection
-  void WaitForClientConnection() {
+  void wait_for_client_connection() {
     m_asioAcceptor.async_accept([this](std::error_code &ec,
                                        asio::ip::tcp::socket socket) {
       if (!ec) {
@@ -56,9 +58,9 @@ public:
                                             m_asioContext, std::move(socket),
                                             m_qMessageIn);
         // Give the user server a change to deny connection
-        if (OnClientConnect(new_connection)) {
+        if (on_client_connect(new_connection)) {
           m_deqConnections.push_back(new_connection);
-          m_deqConnections.back()->ConnectToClient(nIDCounter++);
+          m_deqConnections.back()->connect_to_client(nIDCounter++);
           std::cout << "[" << m_deqConnections.back()->GetId() << "]"
                     << " Connection Approved" << '\n';
         } else {
@@ -70,26 +72,53 @@ public:
       }
 
       // wait for another connection
-      WaitForClientConnection();
+      wait_for_client_connection();
     });
   }
 
   // Send a message to specifiec client
-  void MessageClient(std::shared_ptr<Connection<T>> client, Message<T> &msg) {}
+  void message_client(std::shared_ptr<Connection<T>> client, Message<T> &msg) {
+    if (client && client.is_connected()) {
+      client->send(msg);
+    } else {
+      on_client_disconnect(client);
+      client.reset();
+      m_deqConnections.erase(
+          std::remove(m_deqConnections.begin(), m_deqConnections.end(), client),
+          m_deqConnections.end());
+    }
+  }
 
-  void
-  MessageAllClient(const Message<T> &msg,
-                   std::shared_ptr<Connection<T>> ignore_client = nullptr) {}
+  void message_all_client(const Message<T> &msg,
+                          std::shared_ptr<Connection<T>> ignore = nullptr) {
+    bool invlidClientExists = false;
+    for (auto &client : m_deqConnections) {
+      if (client && client->is_connected()) {
+        if (client != ignore) {
+          client->send(msg);
+        } else {
+          on_client_disconnect(client);
+          client.reset();
+          invlidClientExists = true;
+        }
+      }
+    }
+    if (invlidClientExists) {
+      m_deqConnections.erase(std::remove(m_deqConnections.begin(),
+                                         m_deqConnections.end(), nullptr),
+                             m_deqConnections.end());
+    }
+  }
 
 protected:
-  virtual bool OnClientConnect(std::shared_ptr<Connection<T>> client) {
+  virtual bool on_client_connect(std::shared_ptr<Connection<T>> client) {
     return false;
   }
 
-  virtual void OnClientDisconnect(std::shared_ptr<Connection<T>> client) {}
+  virtual void on_client_disconnect(std::shared_ptr<Connection<T>> client) {}
 
-  virtual void OnMessage(std::shared_ptr<Connection<T>> client,
-                         Message<T> &msg) {}
+  virtual void on_message(std::shared_ptr<Connection<T>> client,
+                          Message<T> &msg) {}
 
   // Thread safe queue for all incoming mesage
   thread_safe_queue<Owned_message<T>> m_qMessageIn;
