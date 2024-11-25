@@ -14,6 +14,7 @@ template <typename T> struct message_header {
 
 template <typename T> struct message {
   message_header<T> header{};
+  // vector data which is holding is just a vector of Char
   std::vector<uint8_t> body;
 
   inline size_t size() const { return sizeof(message_header<T>) + body.size(); }
