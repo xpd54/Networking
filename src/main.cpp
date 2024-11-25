@@ -12,12 +12,12 @@
 #include <thread>
 #include <vector>
 
-std::vector<char> vBuffer(20 * 1024);
+std::vector<char> vBuffer(1 * 1024);
 void GrabSomeData(asio::ip::tcp::socket &socket) {
   socket.async_read_some(asio::buffer(vBuffer.data(), vBuffer.size()),
                          [&](std::error_code ec, size_t length) {
                            if (!ec) {
-                             std::cout << "\n\n Read " << length << " bytes"
+                             std::cout << "\n\nRead " << length << " bytes"
                                        << '\n';
                              for (size_t i = 0; i < length; ++i)
                                std::cout << vBuffer[i];
@@ -55,6 +55,9 @@ int main() {
                            "Connection: close \r\n\r\n";
     /*If socket is open write some data in that socket with write_some*/
     socket.write_some(asio::buffer(sRequest.data(), sRequest.size()), ec);
+    std::cout << "---------------"
+              << "Sleep will get exicuted"
+              << "---------------" << '\n';
     std::this_thread::sleep_for(std::chrono::seconds(10));
     context.stop();
 
