@@ -4,10 +4,10 @@
 #include <cstring>
 #include <ostream>
 #include <type_traits>
+xpd54_namespace_start
 
-namespace xpd54 {
-namespace network {
-template <typename T> struct message_header {
+    template <typename T>
+    struct message_header {
   T id{};
   uint32_t size = 0;
 };
@@ -61,5 +61,4 @@ template <typename T> struct message {
     return msg;
   }
 };
-} // namespace network
-} // namespace xpd54
+xpd54_namespace_end
