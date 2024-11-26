@@ -12,12 +12,12 @@ public:
   thread_safe_queue(const thread_safe_queue<T> &) = delete;
   ~thread_safe_queue() { clear(); }
 
-  const T &front() const {
+  const T &front() {
     std::scoped_lock lock(mutex_queue);
     return deqQueue.front();
   }
 
-  const T &back() const {
+  const T &back() {
     std::scoped_lock lock(mutex_queue);
     return deqQueue.back();
   }
@@ -32,7 +32,7 @@ public:
     deqQueue.emplace_front(std::move(item));
   }
 
-  size_t count() const {
+  size_t count() {
     std::scoped_lock lock(mutex_queue);
     return deqQueue.size();
   }

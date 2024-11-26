@@ -35,7 +35,7 @@ public:
 
   uint32_t get_id() const { return id; }
 
-  bool send(const Message<T> &msg) {
+  void send(const Message<T> &msg) {
     asio::post(m_asioContext, [this, msg]() {
       bool is_writing_message = !m_qMessagesOut.empty();
       m_qMessagesOut.push_back(msg);
@@ -109,8 +109,8 @@ private:
 
   // async:- ready to write a message header
   void write_header() {
-    asio::async_write(m_socket, asio::buffer(&m_qMessagesOut.front().header(), sizeof(message_header<T>)),
-                      [this](std::error_code ec, size_t length) {
+    asio::async_write(m_socket, asio::buffer(&m_qMessagesOut.front().header, sizeof(message_header<T>)),
+                      [this](std::error_code ec, std::size_t length) {
                         if (!ec) {
                           if (m_qMessagesOut.front().body.size() > 0) {
                             write_body();
@@ -132,7 +132,7 @@ private:
 
   // async:- ready to wite a message body
   void write_body() {
-    asio::async_write(m_socket, asio::buffer(&m_qMessagesOut.front().header(), sizeof(message_header<T>)),
+    asio::async_write(m_socket, asio::buffer(&m_qMessagesOut.front().header, sizeof(message_header<T>)),
                       [this](std::error_code ec, size_t length) {
                         if (!ec) {
                           // if successfull to write and no errro pop the front message
