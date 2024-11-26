@@ -45,7 +45,7 @@ public:
     });
   }
 
-  bool connect_to_server(const asio::ip::tcp::resolver::results_type &endpoints) {
+  void connect_to_server(const asio::ip::tcp::resolver::results_type &endpoints) {
     // only client can connect to servers
     if (m_nOwerType == Owner::client) {
       asio::async_connect(m_socket, endpoints, [this](std::error_code ec, asio::ip::tcp::endpoint endpoint) {
@@ -66,7 +66,7 @@ public:
     }
   }
 
-  bool disconnect() {
+  void disconnect() {
     if (is_connected()) {
       asio::post(m_asioContext, [this]() { m_socket.close(); });
     }
@@ -95,7 +95,7 @@ private:
   }
   // async:- ready to read a message body
   void read_body() {
-    asio::async_read(m_socket, asio::buffer(&m_msgTemporaryIn.body.data(), m_msgTemporaryIn.body.size()),
+    asio::async_read(m_socket, asio::buffer(m_msgTemporaryIn.body.data(), m_msgTemporaryIn.body.size()),
                      [this](std::error_code ec, size_t length) {
                        if (!ec) {
                          add_to_incomming_message_queue();

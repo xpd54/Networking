@@ -43,7 +43,7 @@ public:
     return true;
   }
 
-  bool disconnect() {
+  void disconnect() {
     if (is_connected()) {
       m_connection->disconnect();
     }
@@ -61,7 +61,7 @@ public:
 
   bool is_connected() {
     if (m_connection) {
-      return m_connection->is_connected;
+      return m_connection->is_connected();
     } else {
       return false;
     }
@@ -83,10 +83,8 @@ protected:
   // (unique_ptr)
   std::unique_ptr<Connection<T>> m_connection;
 
-  asio::ip::tcp::endpoint m_endpoints;
-
 private:
   // incoming messages from server which connection have as reference.
-  thread_safe_queue<T> m_qMessagesIn;
+  thread_safe_queue<Owned_message<T>> m_qMessagesIn;
 };
 xpd54_namespace_end
