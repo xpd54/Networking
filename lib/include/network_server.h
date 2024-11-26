@@ -15,6 +15,7 @@
 #include <thread>
 
 #include "network_common.h"
+#include "network_connection.h"
 #include "network_message.h"
 #include "network_thread_safe_queue.h"
 xpd54_namespace_start template <typename T> class Network_Server {
@@ -56,19 +57,18 @@ public:
 
   // Async - instruct asio to wait for connection
   void wait_for_client_connection() {
-    // m_asioAcceptor.async_accept([&]() {});
     m_asioAcceptor.async_accept([this](std::error_code ec, asio::ip::tcp::socket socket) {
       if (!ec) {
         // get ip address
         std::cout << "[Server] New connection: " << socket.remote_endpoint() << '\n';
         // create new connection
         std::shared_ptr<Connection<T>> new_connection = std::make_shared<Connection<T>>(
-            Connection<T>::owner::server, m_asioContext, std::move(socket), m_qMessagesIn);
+            Connection<T>::Owner::server, m_asioContext, std::move(socket), m_qMessagesIn);
         // Give the user server a change to deny connection
         if (on_client_connect(new_connection)) {
           m_deqConnections.push_back(new_connection);
           m_deqConnections.back()->connect_to_client(nIDCounter++);
-          std::cout << "[" << m_deqConnections.back()->GetId() << "]"
+          std::cout << "[" << m_deqConnections.back()->get_id() << "]"
                     << " Connection Approved" << '\n';
         } else {
           std::cout << "[-----] Connection Denied" << '\n';
@@ -125,10 +125,8 @@ protected:
   thread_safe_queue<Owned_message<T>> m_qMessagesIn;
   // Container of active validated connecitons
   std::deque<std::shared_ptr<Connection<T>>> m_deqConnections;
-
   asio::io_context m_asioContext;
   std::thread m_threadContext;
-
   asio::ip::tcp::acceptor m_asioAcceptor;
 
   // Client will be indetified in the "wider system" via a ID
