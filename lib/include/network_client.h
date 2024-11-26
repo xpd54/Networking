@@ -67,6 +67,11 @@ public:
     }
   }
 
+  void send(const Message<T> &msg) {
+    if (is_connected())
+      m_connection->send(msg);
+  }
+
   thread_safe_queue<Owned_message<T>> &incoming() { return m_qMessagesIn; }
 
 protected:
