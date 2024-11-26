@@ -61,7 +61,16 @@ public:
     return deqQueue.empty();
   }
 
+  void wait() {
+    while (empty()) {
+      std::unique_lock<std::mutex> ul(mutex_blocking);
+      condition_var.wait(ul);
+    }
+  }
+
 protected:
+  std::condition_variable condition_var;
+  std::mutex mutex_blocking;
   std::mutex mutex_queue;
   std::deque<T> deqQueue;
 };
