@@ -9,6 +9,7 @@
 #include <system_error>
 
 #include "asio/buffer.hpp"
+#include "asio/connect.hpp"
 #include "asio/post.hpp"
 #include "asio/read.hpp"
 #include "asio/write.hpp"
@@ -44,9 +45,19 @@ public:
     });
   }
 
-  bool connect_to_server();
+  bool connect_to_server(const asio::ip::tcp::resolver::results_type &endpoints) {
+    // only client can connect to servers
+    if (m_nOwerType == Owner::client) {
+      asio::async_connect(m_socket, endpoints, [this](std::error_code ec, asio::ip::tcp::endpoint endpoint) {
+        if (!ec) {
+          read_header();
+        }
+      });
+    }
+  }
 
   void connect_to_client(uint32_t uid = 0) {
+    // only server connection can connect to client
     if (m_nOwerType == Owner::server) {
       if (m_socket.is_open()) {
         id = uid;
@@ -61,7 +72,7 @@ public:
     }
   }
 
-  bool is_connected() const;
+  bool is_connected() const { return m_socket.is_open(); }
 
 private:
   // async:- ready to read a message header
