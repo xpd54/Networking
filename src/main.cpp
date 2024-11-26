@@ -1,7 +1,3 @@
-#include "asio/buffer.hpp"
-#include "asio/io_context.hpp"
-#include "asio/ip/address.hpp"
-#include "asio/ip/tcp.hpp"
 #include <asio.hpp>
 #include <asio/ts/buffer.hpp>
 #include <asio/ts/internet.hpp>
@@ -12,18 +8,21 @@
 #include <thread>
 #include <vector>
 
+#include "asio/buffer.hpp"
+#include "asio/io_context.hpp"
+#include "asio/ip/address.hpp"
+#include "asio/ip/tcp.hpp"
+
 std::vector<char> vBuffer(1 * 1024);
 void GrabSomeData(asio::ip::tcp::socket &socket) {
-  socket.async_read_some(asio::buffer(vBuffer.data(), vBuffer.size()),
-                         [&](std::error_code ec, size_t length) {
-                           if (!ec) {
-                             std::cout << "\n\nRead " << length << " bytes"
-                                       << '\n';
-                             for (size_t i = 0; i < length; ++i)
-                               std::cout << vBuffer[i];
-                             GrabSomeData(socket);
-                           }
-                         });
+  socket.async_read_some(asio::buffer(vBuffer.data(), vBuffer.size()), [&](std::error_code ec, size_t length) {
+    if (!ec) {
+      std::cout << "\n\nRead " << length << " bytes" << '\n';
+      for (size_t i = 0; i < length; ++i)
+        std::cout << vBuffer[i];
+      GrabSomeData(socket);
+    }
+  });
 }
 
 int main() {
@@ -35,8 +34,7 @@ int main() {
   std::thread context_thread = std::thread([&]() { context.run(); });
   asio::io_context::work idleWork(context);
   // have an address to connect with
-  asio::ip::tcp::endpoint endpoint(asio::ip::make_address("51.38.81.49", ec),
-                                   80);
+  asio::ip::tcp::endpoint endpoint(asio::ip::make_address("51.38.81.49", ec), 80);
   // create a socket, the context will deliver the implementation
   asio::ip::tcp::socket socket(context);
   // tell socketto try and connect to the end point which we have defined

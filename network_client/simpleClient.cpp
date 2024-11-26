@@ -1,6 +1,7 @@
+#include <cstdint>
+
 #include "network_message.h"
 #include "xpd54_network.h"
-#include <cstdint>
 enum class CustomMsgTypes : uint32_t { FireBullet, MovePlayer };
 int main() {
   // only allowd custom msg types

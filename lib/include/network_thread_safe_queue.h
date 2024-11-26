@@ -1,14 +1,12 @@
 #pragma once
-#include "network_common.h"
 #include <cstddef>
 #include <deque>
 #include <mutex>
 #include <utility>
 
-xpd54_namespace_start
+#include "network_common.h"
 
-    template <typename T>
-    class thread_safe_queue {
+xpd54_namespace_start template <typename T> class thread_safe_queue {
 public:
   thread_safe_queue() = default;
   thread_safe_queue(const thread_safe_queue<T> &) = delete;
@@ -39,11 +37,6 @@ public:
     return deqQueue.size();
   }
 
-  void clear() {
-    std::scoped_lock lock(mutex_queue);
-    deqQueue.clear();
-  }
-
   T pop_front() {
     std::scoped_lock lock(mutex_queue);
     auto item = std::move(deqQueue.front());
@@ -56,6 +49,16 @@ public:
     auto item = std::move(deqQueue.back());
     deqQueue.pop_back();
     return item;
+  }
+
+  void clear() {
+    std::scoped_lock lock(mutex_queue);
+    deqQueue.clear();
+  }
+
+  bool empty() {
+    std::scoped_lock lock(mutex_queue);
+    return deqQueue.empty();
   }
 
 protected:

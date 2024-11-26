@@ -1,15 +1,22 @@
 #pragma once
-#include "network_common.h"
-#include "network_message.h"
-#include "network_thread_safe_queue.h"
 #include <asio/io_context.hpp>
 #include <asio/ip/tcp.hpp>
 #include <memory>
-xpd54_namespace_start template <typename T>
-class Connection : public std::enable_shared_from_this<Connection<T>> {
+
+#include "network_common.h"
+#include "network_message.h"
+#include "network_thread_safe_queue.h"
+xpd54_namespace_start template <typename T> class Connection : public std::enable_shared_from_this<Connection<T>> {
 public:
   Connection() {}
   virtual ~Connection() {}
+
+  // A connection can be hold by a server or client same object get used in both
+  // places
+  enum class owner {
+    server,
+    client,
+  };
 
   bool send(const Message<T> &msg);
   bool connect_to_server();

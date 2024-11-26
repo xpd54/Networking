@@ -1,10 +1,11 @@
 #pragma once
-#include "network_common.h"
 #include <cstddef>
 #include <cstring>
 #include <memory>
 #include <ostream>
 #include <type_traits>
+
+#include "network_common.h"
 xpd54_namespace_start template <typename T> struct message_header {
   T id{};
   uint32_t size = 0;
@@ -21,11 +22,9 @@ template <typename T> struct Message {
     return os;
   }
 
-  template <typename DataType>
-  friend Message<T> &operator<<(Message<T> &msg, const DataType &data) {
+  template <typename DataType> friend Message<T> &operator<<(Message<T> &msg, const DataType &data) {
     // assert if data can be pushed into the vector
-    static_assert(std::is_standard_layout<DataType>::value,
-                  "Data is too complex");
+    static_assert(std::is_standard_layout<DataType>::value, "Data is too complex");
     size_t msg_body_size = msg.body.size();
     // resize the body with
     msg.body.resize(msg_body_size + sizeof(DataType));
@@ -39,11 +38,9 @@ template <typename T> struct Message {
     return msg;
   }
 
-  template <typename DataType>
-  friend Message<T> &operator>>(Message<T> &msg, DataType &data) {
+  template <typename DataType> friend Message<T> &operator>>(Message<T> &msg, DataType &data) {
     // assert if data is copyable
-    static_assert(std::is_standard_layout_v<DataType>,
-                  "Data is too complex to copy");
+    static_assert(std::is_standard_layout_v<DataType>, "Data is too complex to copy");
     // get size how much suppose to be copy
     size_t data_body_size = msg.body.size() - sizeof(DataType);
 
@@ -65,8 +62,7 @@ template <typename T> struct Owned_message {
   std::shared_ptr<Connection<T>> remote = nullptr;
   Message<T> msg;
 
-  friend std::ostream &operator<<(std::ostream &os,
-                                  const Owned_message<T> &msg) {
+  friend std::ostream &operator<<(std::ostream &os, const Owned_message<T> &msg) {
     os << msg.msg;
     return os;
   }

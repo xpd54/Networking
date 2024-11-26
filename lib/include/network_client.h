@@ -1,7 +1,4 @@
 #pragma once
-#include "network_common.h"
-#include "network_message.h"
-#include "network_thread_safe_queue.h"
 #include <asio/io_context.hpp>
 #include <asio/ip/tcp.hpp>
 #include <cstdint>
@@ -10,6 +7,10 @@
 #include <memory>
 #include <string>
 #include <thread>
+
+#include "network_common.h"
+#include "network_message.h"
+#include "network_thread_safe_queue.h"
 xpd54_namespace_start template <typename T> class Network_Client {
 public:
   Network_Client() : m_socket(m_context) {
@@ -41,7 +42,6 @@ public:
   }
 
   bool disconnect() {
-
     if (is_connected()) {
       m_connection->disconnect();
     }

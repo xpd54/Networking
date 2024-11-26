@@ -1,8 +1,7 @@
 #pragma once
-#include "network_common.h"
-#include "network_message.h"
-#include "network_thread_safe_queue.h"
 #include <__algorithm/remove.h>
+#include <sys/_types/_pid_t.h>
+
 #include <algorithm>
 #include <asio/io_context.hpp>
 #include <asio/ip/tcp.hpp>
@@ -12,18 +11,19 @@
 #include <exception>
 #include <iostream>
 #include <memory>
-#include <sys/_types/_pid_t.h>
 #include <system_error>
 #include <thread>
+
+#include "network_common.h"
+#include "network_message.h"
+#include "network_thread_safe_queue.h"
 xpd54_namespace_start template <typename T> class Network_Server {
 public:
-  Network_Server(uint16_t port)
-      : m_asioAcceptor(m_asioContext,
-                       asio::ip::tcp::endpoint(asio::ip::tcp::v4(), port)) {}
+  Network_Server(uint16_t port) : m_asioAcceptor(m_asioContext, asio::ip::tcp::endpoint(asio::ip::tcp::v4(), port)) {}
 
-  virtual ~Network_Server() { Stop(); }
+  virtual ~Network_Server() { stop(); }
 
-  bool Start() {
+  bool start() {
     try {
       wait_for_client_connection();
       m_threadContext = std::thread([this]() { m_asioContext.run(); });
@@ -36,7 +36,7 @@ public:
     return true;
   }
 
-  void Stop() {
+  void stop() {
     m_asioContext.stop();
     // Tidy up context thread
     if (m_threadContext.joinable())
@@ -45,19 +45,25 @@ public:
     std::cout << "[Server] Stopped!" << '\n';
   }
 
+  void update(size_t nMaxMessages = -1) {
+    size_t nMessageCount = 0;
+    while (nMessageCount < nMaxMessages && !m_qMessagesIn.empty()) {
+      auto msg = m_qMessagesIn.pop_front();
+      on_message(msg.remote, msg.msg);
+      nMessageCount++;
+    }
+  }
+
   // Async - instruct asio to wait for connection
   void wait_for_client_connection() {
-    m_asioAcceptor.async_accept([this](std::error_code &ec,
-                                       asio::ip::tcp::socket socket) {
+    // m_asioAcceptor.async_accept([&]() {});
+    m_asioAcceptor.async_accept([this](std::error_code ec, asio::ip::tcp::socket socket) {
       if (!ec) {
         // get ip address
-        std::cout << "[Server] New connection: " << socket.remote_endpoint()
-                  << '\n';
+        std::cout << "[Server] New connection: " << socket.remote_endpoint() << '\n';
         // create new connection
-        std::shared_ptr<Connection<T>> new_connection =
-            std::make_shared<Connection<T>>(Connection<T>::owner::server,
-                                            m_asioContext, std::move(socket),
-                                            m_qMessagesIn);
+        std::shared_ptr<Connection<T>> new_connection = std::make_shared<Connection<T>>(
+            Connection<T>::owner::server, m_asioContext, std::move(socket), m_qMessagesIn);
         // Give the user server a change to deny connection
         if (on_client_connect(new_connection)) {
           m_deqConnections.push_back(new_connection);
@@ -84,14 +90,12 @@ public:
     } else {
       on_client_disconnect(client);
       client.reset();
-      m_deqConnections.erase(
-          std::remove(m_deqConnections.begin(), m_deqConnections.end(), client),
-          m_deqConnections.end());
+      m_deqConnections.erase(std::remove(m_deqConnections.begin(), m_deqConnections.end(), client),
+                             m_deqConnections.end());
     }
   }
 
-  void message_all_client(const Message<T> &msg,
-                          std::shared_ptr<Connection<T>> ignore = nullptr) {
+  void message_all_client(const Message<T> &msg, std::shared_ptr<Connection<T>> ignore = nullptr) {
     bool invlidClientExists = false;
     for (auto &client : m_deqConnections) {
       if (client && client->is_connected()) {
@@ -105,30 +109,17 @@ public:
       }
     }
     if (invlidClientExists) {
-      m_deqConnections.erase(std::remove(m_deqConnections.begin(),
-                                         m_deqConnections.end(), nullptr),
+      m_deqConnections.erase(std::remove(m_deqConnections.begin(), m_deqConnections.end(), nullptr),
                              m_deqConnections.end());
     }
   }
 
-  void update(size_t nMaxMessages = -1) {
-    size_t nMessageCount = 0;
-    while (nMessageCount < nMaxMessages && !m_qMessagesIn.empty()) {
-      auto msg = m_qMessagesIn.pop_front();
-      on_message(msg.remote, msg.msg);
-      nMessageCount++;
-    }
-  }
-
 protected:
-  virtual bool on_client_connect(std::shared_ptr<Connection<T>> client) {
-    return false;
-  }
+  virtual bool on_client_connect(std::shared_ptr<Connection<T>> client) { return false; }
 
   virtual void on_client_disconnect(std::shared_ptr<Connection<T>> client) {}
 
-  virtual void on_message(std::shared_ptr<Connection<T>> client,
-                          Message<T> &msg) {}
+  virtual void on_message(std::shared_ptr<Connection<T>> client, Message<T> &msg) {}
 
   // Thread safe queue for all incoming mesage
   thread_safe_queue<Owned_message<T>> m_qMessagesIn;
