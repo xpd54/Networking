@@ -20,6 +20,8 @@ public:
 
 protected:
   virtual bool on_client_connect(std::shared_ptr<xpd54::network::Connection<CustomMsgTypes>> client) override {
+    std::cout << "on client connect"
+              << "\n";
     xpd54::network::Message<CustomMsgTypes> msg;
     msg.header.id = CustomMsgTypes::ServerAccept;
     client->send(msg);
@@ -32,6 +34,7 @@ protected:
 
   virtual void on_message(std::shared_ptr<xpd54::network::Connection<CustomMsgTypes>> client,
                           xpd54::network::Message<CustomMsgTypes> &msg) override {
+    std::cout << "getting server message" << '\n';
     switch (msg.header.id) {
     case CustomMsgTypes::ServerPing: {
       std::cout << "[" << client->get_id() << "]"

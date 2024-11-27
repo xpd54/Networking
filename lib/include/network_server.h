@@ -44,9 +44,9 @@ public:
   }
 
   void update(size_t nMaxMessages = -1, bool wait = false) {
+    std::cout << "update ...." << '\n';
     if (wait)
       m_qMessagesIn.wait();
-
     size_t nMessageCount = 0;
     while (nMessageCount < nMaxMessages && !m_qMessagesIn.empty()) {
       auto msg = m_qMessagesIn.pop_front();

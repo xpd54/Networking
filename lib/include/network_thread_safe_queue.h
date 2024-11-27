@@ -25,11 +25,17 @@ public:
   void push_back(const T &item) {
     std::scoped_lock lock(mutex_queue);
     deqQueue.emplace_back(std::move(item));
+
+    std::unique_lock<std::mutex> ul(mutex_blocking);
+    condition_var.notify_one();
   }
 
   void push_front(const T &item) {
     std::scoped_lock lock(mutex_queue);
     deqQueue.emplace_front(std::move(item));
+
+    std::unique_lock<std::mutex> ul(mutex_blocking);
+    condition_var.notify_one();
   }
 
   size_t count() {
