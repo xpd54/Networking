@@ -4,7 +4,9 @@
 #include <chrono>
 #include <cstdint>
 #include <cstdio>
+#include <future>
 #include <iostream>
+#include <thread>
 enum class CustomMsgTypes : uint32_t {
   ServerAccept,
   ServerDeny,
@@ -33,20 +35,16 @@ public:
 int main() {
   CustomClient client;
   client.connect("127.0.0.1", 60000);
-  int value;
-  bool quite = false;
-  while (!quite) {
-    std::cin >> value;
-    if (value == 1) {
+  int count = 0;
+  for (int i = 0; i < 200; ++i) {
+    if (i % 3 == 1) {
+      count++;
       client.message_all();
-    } else if (value == 2) {
-      client.ping_server();
     } else {
-      quite = true;
-    }
-    if (!client.is_connected()) {
-      quite = true;
+      client.ping_server();
     }
   }
+  std::cout << count << '\n';
+  std::this_thread::sleep_for(std::chrono::milliseconds(250));
   return 0;
 }

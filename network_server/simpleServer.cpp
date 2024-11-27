@@ -35,6 +35,8 @@ protected:
   virtual void on_message(std::shared_ptr<xpd54::network::Connection<CustomMsgTypes>> client,
                           xpd54::network::Message<CustomMsgTypes> &msg) override {
     std::cout << "getting server message" << '\n';
+    auto var = msg.header.id;
+    std::cout << static_cast<int>(var) << '\n';
     switch (msg.header.id) {
     case CustomMsgTypes::ServerPing: {
       std::cout << "[" << client->get_id() << "]"

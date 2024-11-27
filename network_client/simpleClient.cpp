@@ -34,6 +34,7 @@ public:
 int main() {
   CustomClient client;
   client.connect("127.0.0.1", 60000);
+  int count = 0;
   while (true) {
     if (client.is_connected() && !client.incoming().empty()) {
       auto msg = client.incoming().pop_front().msg;
@@ -51,7 +52,7 @@ int main() {
         // Server has responded to a ping request
         uint32_t client_id;
         msg >> client_id;
-        std::cout << "Hello from [" << client_id << "]\n";
+        std::cout << "Hello from [" << client_id << "]" << count++ << '\n';
       } break;
 
       case CustomMsgTypes::ServerAccept:

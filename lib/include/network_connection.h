@@ -117,7 +117,7 @@ private:
                             // as no body to send remove front message
                             m_qMessagesOut.pop_front();
                             // Also check if whole message queue is empty or what
-                            if (m_qMessagesOut.empty()) {
+                            if (!m_qMessagesOut.empty()) {
                               write_header();
                             }
                           }

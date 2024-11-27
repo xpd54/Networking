@@ -44,7 +44,6 @@ public:
   }
 
   void update(size_t nMaxMessages = -1, bool wait = false) {
-    std::cout << "update ...." << '\n';
     if (wait)
       m_qMessagesIn.wait();
     size_t nMessageCount = 0;
