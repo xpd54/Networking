@@ -16,7 +16,7 @@ template <typename T> struct Message {
   // vector data which is holding is just a vector of Char
   std::vector<uint8_t> body;
 
-  inline size_t size() const { return sizeof(message_header<T>) + body.size(); }
+  inline size_t size() const { return body.size(); }
   friend std::ostream &operator<<(std::ostream &os, const Message<T> &msg) {
     os << "id:" << int(msg.header.id) << " size:" << msg.size();
     return os;

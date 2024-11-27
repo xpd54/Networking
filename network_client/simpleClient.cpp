@@ -1,6 +1,7 @@
 #include <chrono>
 #include <cstdint>
 #include <iostream>
+#include <thread>
 
 #include "network_client.h"
 #include "network_message.h"
@@ -33,14 +34,7 @@ public:
 int main() {
   CustomClient client;
   client.connect("127.0.0.1", 60000);
-  uint32_t value;
-  while (std::cin >> value) {
-    if (value == 1) {
-      client.message_all();
-    } else {
-      client.ping_server();
-    }
-
+  while (true) {
     if (client.is_connected() && !client.incoming().empty()) {
       auto msg = client.incoming().pop_front().msg;
       switch (msg.header.id) {
