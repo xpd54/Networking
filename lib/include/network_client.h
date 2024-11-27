@@ -14,9 +14,7 @@
 #include "network_thread_safe_queue.h"
 xpd54_namespace_start template <typename T> class Network_Client {
 public:
-  Network_Client() : m_socket(m_context) {
-    // Initialize
-  }
+  Network_Client() {}
 
   virtual ~Network_Client() { disconnect(); }
 
@@ -82,8 +80,6 @@ protected:
   asio::io_context m_context;
   // it will need thread of it's own to execute it's work
   std::thread thread_context;
-  // The socket which connects to the server
-  asio::ip::tcp::socket m_socket;
   // If valid connection get createed it will hold single instance of it.
   // (unique_ptr)
   std::unique_ptr<Connection<T>> m_connection;

@@ -66,7 +66,7 @@ public:
             Connection<T>::Owner::server, m_asioContext, std::move(socket), m_qMessagesIn);
         // Give the user server a change to deny connection
         if (on_client_connect(new_connection)) {
-          m_deqConnections.push_back(new_connection);
+          m_deqConnections.push_back(std::move(new_connection));
           m_deqConnections.back()->connect_to_client(nIDCounter++);
           std::cout << "[" << m_deqConnections.back()->get_id() << "]"
                     << " Connection Approved" << '\n';

@@ -14,8 +14,8 @@
     }, {
       "type": "lldb",
       "request": "launch",
-      "name": "Debug Network",
-      "program": "${workspaceFolder}/build/Network",
+      "name": "Debug Server",
+      "program": "${workspaceFolder}/build/xpd54_server",
       "args": [],
       "cwd": "${workspaceFolder}"
     }
